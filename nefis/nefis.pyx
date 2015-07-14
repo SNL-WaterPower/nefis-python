@@ -129,7 +129,8 @@ def defcel(fd, cl_name, el_names_count, el_names):
     elm_names = bytearray(20) * 17 * el_names_count
     for i in range(el_names_count):
         elm_names[17 * i:17 * (i + 1)] = el_names[i]
-    c_elm_names = elm_names
+    str_elm_names = str(elm_names)
+    c_elm_names = str_elm_names
     status = Defcel3(& c_fd, cl_name, c_elm_names_count, c_elm_names)
     return status
 #-------------------------------------------------------------------------
@@ -446,7 +447,7 @@ def getsat(fd, grp_name, att_name):
 #-------------------------------------------------------------------------
 
 
-def inqcel(fd, cl_name, el_names_count):
+def inqcel(fd, cl_name):
     """
     Inquire cel definition
     Keyword arguments:
@@ -464,6 +465,7 @@ def inqcel(fd, cl_name, el_names_count):
     cdef char ** names
     cdef char * c_elm_names
 
+    el_names_count = 100
     buffer_length = 17 * el_names_count
     elm_names = chr(20) * buffer_length
     c_elm_names = elm_names
@@ -512,7 +514,7 @@ def inqdat(fd, grp_name):
 #-------------------------------------------------------------------------
 
 
-def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
+def inqelm(fd, elm_name):
     """
     Inquire element definition
     Keyword arguments:
@@ -538,6 +540,7 @@ def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
     cdef char * c_unit
     cdef char * c_description
     cdef int    c_count
+    cdef int [:]  c_el_dimensions
     cdef int *  c_dimensions
 
     buffer_length = 17
@@ -555,16 +558,22 @@ def inqelm(fd, elm_name, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
     c_description = buf4
 
     c_fd = fd
-    elm_dimensions = np.arange(5).reshape(5)
-    c_dimensions = &el_dimensions[0]
+
+    c_count = 5
+    el_dimensions = np.zeros(c_count, dtype=np.int32)
+    c_el_dimensions = el_dimensions
+    c_dimensions = &c_el_dimensions[0]
 
     status = Inqelm(& c_fd, elm_name, c_type, & c_single_bytes, c_quantity, c_unit, c_description, & c_count, c_dimensions)
 
-    return status, c_type, c_single_bytes, c_quantity, c_unit, c_description, c_count
+    el_dimensions = np.asarray(c_el_dimensions)
+    el_dimensions = el_dimensions[0:c_count]
+
+    return status, c_type, c_single_bytes, c_quantity, c_unit, c_description, c_count, el_dimensions
 #-------------------------------------------------------------------------
 
 
-def inqfcl(fd, el_names_count):
+def inqfcl(fd):
     """
     Inquire cel definition of the first cel
     Keyword arguments:
@@ -586,12 +595,12 @@ def inqfcl(fd, el_names_count):
     cdef char * c_cel_name
 
     c_fd = fd
-    cel_name = bytearray(20) * 17
+    cel_name = str(bytearray(20) * 17)
     c_cel_name = cel_name
 
-    c_elm_names_count = el_names_count
+    c_elm_names_count = 100
 
-    buffer_length = 17 * el_names_count
+    buffer_length = 17 * c_elm_names_count
     elm_names = chr(20) * buffer_length
     c_elm_names = elm_names
 
@@ -611,7 +620,7 @@ def inqfcl(fd, el_names_count):
 #-------------------------------------------------------------------------
 
 
-def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
+def inqfel(fd):
     """
     Inquire element definition of the first element
     Keyword arguments:
@@ -639,10 +648,12 @@ def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     cdef char * c_unit
     cdef char * c_description
     cdef int    c_count
+    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions
     cdef int * c_dimensions
 
     elm_name = bytearray(20) * 17
-    c_elm_name = elm_name
+    str_elm_name = str(elm_name)
+    c_elm_name = str_elm_name
 
     buffer_length = 17
     buf1 = chr(20) * buffer_length
@@ -659,23 +670,26 @@ def inqfel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     c_description = buf4
 
     c_fd = fd
-    elm_dimensions = np.arange(5).reshape(5)
+
+    c_count = 5
+    el_dimensions = np.zeros(c_count, dtype=np.int32)
+    el_dimensions = np.ascontiguousarray(el_dimensions)
     c_dimensions = &el_dimensions[0]
 
-    c_count = elm_count_dimensions
-
     status = Inqfel( & c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, & c_count, c_dimensions)
-    elm_size_bytes = c_bytes
-    elm_count_dimensions = c_count
+    el_dimensions = el_dimensions[0:c_count]
 
-    c_elm_name[16] = '\0'
-    elm_name = c_elm_name
+    b_elm_name=bytearray(c_elm_name)
+    b_elm_name[16] = '\0'
+    elm_name = str(b_elm_name).strip(' \x00')
 
-    return status, elm_name, c_type, c_quantity, c_unit, c_description, c_single_bytes, elm_size_bytes, elm_count_dimensions
+
+    #return status, elm_name, c_type, c_quantity, c_unit, c_description, c_single_bytes, c_bytes, c_count, np.asarray(el_dimensions)
+    return status, elm_name, c_type, c_quantity, c_unit, c_description, c_single_bytes, c_bytes, c_count, el_dimensions
 #-------------------------------------------------------------------------
 
 
-def inqfgr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np.ndarray[int, ndim=1, mode="c"] gr_order):
+def inqfgr(fd):
     """
     Inquire group definition of the first group (definition part)
     Keyword arguments:
@@ -696,6 +710,12 @@ def inqfgr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     cdef int   status
     cdef char * c_grp_name
     cdef char * c_cel_name
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_dimensions
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_order
+
+    gr_dim_count = 5
+    gr_dimensions = np.zeros(5,dtype=np.int32)
+    gr_order = np.zeros(5,dtype=np.int32)
 
     c_fd = fd
     c_grp_dim_count = gr_dim_count
@@ -710,11 +730,10 @@ def inqfgr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     c_cel_name = buf2
 
     status = Inqfgr( & c_fd, c_grp_name, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
-    grp_name = c_grp_name
-    cel_name = c_cel_name
-    grp_dim_count = c_grp_dim_count
+    gr_order = gr_order[0:c_grp_dim_count]
+    gr_dimensions = gr_dimensions[0:c_grp_dim_count]
 
-    return status, grp_name, c_cel_name, c_grp_dim_count
+    return status, c_grp_name, c_cel_name, c_grp_dim_count, gr_dimensions, gr_order
 #-------------------------------------------------------------------------
 
 
@@ -835,7 +854,7 @@ def inqfst(fd):
 #-------------------------------------------------------------------------
 
 
-def inqgrp(fd, grp_defined, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np.ndarray[int, ndim=1, mode="c"] gr_order):
+def inqgrp(fd, grp_defined):
     """
     Inquire group definition
     Keyword arguments:
@@ -857,6 +876,13 @@ def inqgrp(fd, grp_defined, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_d
     cdef char * c_grp_name
     cdef char * c_cel_name
 
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_dimensions
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_order
+    
+    gr_dim_count = 5
+    gr_dimensions = np.zeros(5,dtype=np.int32)
+    gr_order = np.zeros(5,dtype=np.int32)
+
     c_fd = fd
     c_grp_dim_count = gr_dim_count
     c_grp_dimensions = &gr_dimensions[0]
@@ -866,10 +892,12 @@ def inqgrp(fd, grp_defined, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_d
     buf1 = chr(20) * buffer_length
     c_cel_name = buf1
 
-    status = Inqfgr( & c_fd, grp_defined, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
-    grp_dim_count = c_grp_dim_count
 
-    return status, c_cel_name[:16], c_grp_dim_count
+    status = Inqgrp( & c_fd, grp_defined, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
+    gr_order = gr_order[0:c_grp_dim_count]
+    gr_dimensions = gr_dimensions[0:c_grp_dim_count]
+
+    return status, c_cel_name[:16], c_grp_dim_count, gr_dimensions, gr_order
 #-------------------------------------------------------------------------
 
 
@@ -896,7 +924,7 @@ def inqmxi(fd, grp_name):
 #-------------------------------------------------------------------------
 
 
-def inqncl(fd, el_names_count):
+def inqncl(fd):
     """
     Inquire next cel
     Keyword arguments:
@@ -918,12 +946,13 @@ def inqncl(fd, el_names_count):
     cdef char * c_cel_name
 
     c_fd = fd
-    cel_name = bytearray(20) * 17
+    cel_name = str(bytearray(20) * 17)
     c_cel_name = cel_name
 
-    c_elm_names_count = el_names_count
+    c_elm_names_count = 100
 
-    buffer_length = 17 * el_names_count
+    buffer_length = 17 * c_elm_names_count
+
     elm_names = chr(20) * buffer_length
     c_elm_names = elm_names
 
@@ -943,7 +972,7 @@ def inqncl(fd, el_names_count):
 #-------------------------------------------------------------------------
 
 
-def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimensions):
+def inqnel(fd):
     """
     Inquire next element
     Keyword arguments:
@@ -971,10 +1000,12 @@ def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     cdef char * c_unit
     cdef char * c_description
     cdef int    c_count
+    cdef np.ndarray[int, ndim=1, mode="c"] el_dimensions
     cdef int * c_dimensions
 
     elm_name = bytearray(20) * 17
-    c_elm_name = elm_name
+    str_elm_name = str(elm_name)
+    c_elm_name = str_elm_name
 
     buffer_length = 17
     buf1 = chr(20) * buffer_length
@@ -991,23 +1022,24 @@ def inqnel(fd, elm_count_dimensions, np.ndarray[int, ndim=1, mode="c"] el_dimens
     c_description = buf4
 
     c_fd = fd
-    elm_dimensions = np.arange(5).reshape(5)
+
+    c_count = 5
+    el_dimensions = np.zeros(c_count, dtype=np.int32)
+    el_dimensions = np.ascontiguousarray(el_dimensions)
     c_dimensions = &el_dimensions[0]
 
-    c_count = elm_count_dimensions
-
     status = Inqnel( & c_fd, c_elm_name, c_type, c_quantity, c_unit, c_description, & c_single_bytes, & c_bytes, & c_count, c_dimensions)
-    elm_size_bytes = c_bytes
-    elm_count_dimensions = c_count
+    el_dimensions = el_dimensions[0:c_count]
 
-    c_elm_name[16] = '\0'
-    elm_name = c_elm_name
+    b_elm_name=bytearray(c_elm_name)
+    b_elm_name[16] = '\0'
+    elm_name = str(b_elm_name).strip(' \x00')
 
-    return status, elm_name, c_type, c_quantity, c_unit, c_description, c_single_bytes, elm_size_bytes, elm_count_dimensions
+    return status, elm_name, c_type, c_quantity, c_unit, c_description, c_single_bytes, c_bytes, c_count, el_dimensions
 #-------------------------------------------------------------------------
 
 
-def inqngr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np.ndarray[int, ndim=1, mode="c"] gr_order):
+def inqngr(fd):
     """
     Inquire group definition of the next group (definition part)
     Keyword arguments:
@@ -1029,6 +1061,13 @@ def inqngr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     cdef char * c_grp_name
     cdef char * c_cel_name
 
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_dimensions
+    cdef np.ndarray[int, ndim=1, mode="c"] gr_order
+
+    gr_dim_count = 5
+    gr_dimensions = np.zeros(5,dtype=np.int32)
+    gr_order = np.zeros(5,dtype=np.int32)
+
     c_fd = fd
     c_grp_dim_count = gr_dim_count
     c_grp_dimensions = &gr_dimensions[0]
@@ -1042,11 +1081,10 @@ def inqngr(fd, gr_dim_count, np.ndarray[int, ndim=1, mode="c"] gr_dimensions, np
     c_cel_name = buf2
 
     status = Inqngr( & c_fd, c_grp_name, c_cel_name, & c_grp_dim_count, c_grp_dimensions, c_grp_order)
-    grp_name = c_grp_name
-    cel_name = c_cel_name
-    grp_dim_count = c_grp_dim_count
+    gr_order = gr_order[0:c_grp_dim_count]
+    gr_dimensions = gr_dimensions[0:c_grp_dim_count]
 
-    return status, grp_name, c_cel_name, c_grp_dim_count
+    return status, c_grp_name, c_cel_name, c_grp_dim_count, gr_dimensions, gr_order
 #-------------------------------------------------------------------------
 
 
@@ -1233,7 +1271,7 @@ def putels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_description = buf4
 
     c_count = 5  # maximal number of dimensions for an element
-    elm_dimensions = np.arange(5).reshape(5)
+    elm_dimensions = np.arange(5,dtype=np.int32)
     for i in range(c_count):
         elm_dimensions[i] = 1
     c_dimensions = <int * > elm_dimensions.data
@@ -1253,7 +1291,8 @@ def putels(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
         buffer = list(itertools.chain(*buffer))
     for i in range(multiply):
         strings[length * i:length * (i + 1)] = buffer[i]
-    c_buffer = strings
+    str_strings = str(strings)
+    c_buffer = str_strings
 
     status = Putels(& c_fd, gr_name, el_name, c_user_index, c_user_order, c_buffer)
 
@@ -1306,7 +1345,7 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     c_description = buf4
 
     c_count = 5  # maximal number of dimensions for an element
-    elm_dimensions = np.arange(5).reshape(5)
+    elm_dimensions = np.arange(5,dtype=np.int32)
     for i in range(c_count):
         elm_dimensions[i] = 1
     c_dimensions = <int * > elm_dimensions.data
@@ -1324,7 +1363,8 @@ def putelt(fd, gr_name, el_name, np.ndarray[int, ndim=2, mode="c"] user_index, n
     strings = bytearray(20) * length * multiply
     for i in range(length * multiply):
         strings[i:i * (i + 1)] = buffer[i]
-    c_buffer = strings
+    str_strings = str(strings)
+    c_buffer = str_strings
 
     status = Putelt(& c_fd, gr_name, el_name, c_user_index, c_user_order, c_buffer)
 
