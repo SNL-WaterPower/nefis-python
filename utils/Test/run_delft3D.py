@@ -1,0 +1,73 @@
+
+def make_config_file(basename):
+    with open('config_flow2d3d.xml','w') as fout:
+        fout.write(r'''<?xml version="1.0" encoding="iso-8859-1"?>
+<deltaresHydro xmlns="http://schemas.deltares.nl/deltaresHydro" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.deltares.nl/deltaresHydro http://content.oss.deltares.nl/schemas/d_hydro-1.00.xsd">
+    <documentation>
+        File created by    : Deltares, create_config_xml.tcl, Version 1.00
+        File creation date : 08 June 2015, 13:22:26
+        File version       : 1.00
+    </documentation>
+    <control>
+        <sequence>
+            <start>myNameFlow</start>
+        </sequence>
+    </control>
+    <flow2D3D name="myNameFlow">
+        <library>flow2d3d</library>
+        <mdfFile>'''+basename+'''.mdf</mdfFile>
+        <!--
+            Note: exactly one mdfFile (single domain) or ddbFile (domain decomposition)
+            element must be present.
+        -->
+        <!--
+            Options/alternatives:
+            1) DomainDecomposition: replace <mdfFile>f34.mdf</mdfFile> with:
+                <ddbFile>vlissingen.ddb</ddbFile>
+            2) Specification of dll/so to use:
+                <library>/opt/delft3d/lnx64/flow2d3d/bin/libflow2d3d.so</library>
+            3) Single precision:
+                <library>flow2d3d_sp</library>
+            4) Documentation:
+                <documentation>
+                    Basic tutorial testcase.
+                </documentation>
+            5) More output to screen (silent, error, info, trace. default: error):
+                <verbosity>trace</verbosity>
+            6) Debugging by attaching to running processes (parallel run):
+                <waitFile>debug.txt</waitFile>
+            7) Force stack trace to be written (Linux only):
+                <crashOnAbort>true</crashOnAbort>
+        -->
+    </flow2D3D>
+    <delftOnline>
+        <enabled>true</enabled>
+        <urlFile>'''+basename+'''.url</urlFile>
+        <waitOnStart>false</waitOnStart>
+        <clientControl>true</clientControl>    <!-- client allowed to start, step, stop, terminate -->
+        <clientWrite>false</clientWrite>    <!-- client allowed to modify data -->
+        <!--
+            Options/alternatives:
+            1) Change port range:
+                <tcpPortRange start="51001" end="51099"/>
+            2) More output to screen (silent, error, info, trace. default: error):
+                <verbosity>trace</verbosity>
+            3) Force stack trace to be written (Linux only):
+                <crashOnAbort>true</crashOnAbort>
+        -->
+    </delftOnline>
+</deltaresHydro>''')
+
+
+def run_delft3D(D3Dexe,basename):
+    import os
+
+    # setup config file
+    make_config_file(basename)
+
+    # run delft3D
+    error = os.system(D3Dexe+' config_flow2d3d.xml')
+
+    
+    return error
+

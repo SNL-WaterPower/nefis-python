@@ -1,0 +1,17 @@
+use trim-IFREMER.dat def trim-IFREMER.def
+disp map-series
+let U = U1(13,13,1;;13,13,1) from map-series
+write U to U.dat
+let Upoint = U1(13,13,1;13,13,1;13,13,1) from map-series
+write Upoint to Upoint.dat
+rele all
+exit
+
+REM line 1 reads the trim-*.dat file using the trim-X.def definition file
+REM line 2 displays the variables and sizes of arrays in the trim-*.dat file, but you will have to hit the space bar to continue it, so you may want to delete it for full automation
+REM line 3 establishes a variable U that is loaded with the u-velocity data that reads (start_M,stop_M,increment_M;start_N,stop_N,increment_N;start_k,stop_k,increment_k)
+REM line 4 writes the newly defined U variable to file "U.dat"
+REM line 5 establishes a variable Upoint that is loaded with the u-velocity data at (M,N,K)=(13,13,13)
+REM line 6 writes newly defined Upoint to file "Upoint.dat"
+REM line 7 releases defined variables
+REM line 8 exits the VS program

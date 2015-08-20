@@ -1,0 +1,8 @@
+[FileInformation]
+  FileGeneratedBy  = Deltares, QUICKIN Version 5.00.00.36850, Nov 10 2014, 13:51:01
+  FileCreationDate = 2015-04-28, 07:54:27
+  FileVersion      = 0.02
+[Grid]
+  Type        = RGF
+  FileName    = IFREMER.grd
+  FlowDepth   = IFREMER.dep

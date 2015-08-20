@@ -1,0 +1,133 @@
+Ident  = #Delft3D-FLOW 3.56.29165#
+Commnt =                  
+Runtxt = #IFREMER 8 - use the fixed code#
+         #changed CT to 0.97#
+         #activated SNL turbine model#
+         #new set of turb parameters#
+Filcco = #IFREMER.grd#
+Anglat =  0.0000000e+000
+Grdang =  0.0000000e+000
+Filgrd = #IFREMER.enc#
+MNKmax = 112 27 25
+Thick  =  4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+          4.0000000e+000
+Commnt =                  
+Depuni =  2.0000000e+000
+Commnt =                  
+Commnt =                 no. dry points: 0
+Commnt =                 no. thin dams: 0
+Commnt =                  
+Itdate = #2015-04-28#
+Tunit  = #M#
+Tstart =  0.0000000e+000
+Tstop  =  1.5000000e+001
+Dt     = 0.002
+Tzone  = 0
+Commnt =                  
+Sub1   = #    #
+Sub2   = #   #
+Commnt =                  
+Wnsvwp = #N#
+Wndint = #Y#
+Commnt =                  
+Commnt =                 initial conditions from restart file
+Restid = #IFREMER7.20150428.000200#
+Commnt =                  
+Commnt =                 no. open boundaries: 2
+Filbnd = #IFREMER.bnd#
+FilbcT = #IFREMER.bct#
+Commnt =                  
+Ag     =  9.8100000e+000
+Rhow   =  1.0000000e+003
+Tempw  =  1.5000000e+001
+Salw   =  3.1000000e+001
+Wstres =  6.3000000e-004  0.0000000e+000  7.2300000e-003  1.0000000e+002  7.2300000e-003  1.0000000e+002
+Rhoa   =  1.0000000e+000
+Betac  =  5.0000000e-001
+Equili = #N#
+Tkemod = #K-epsilon   #
+Ktemp  = 0
+Fclou  =  0.0000000e+000
+Sarea  =  0.0000000e+000
+Temint = #Y#
+Commnt =                  
+Roumet = #Z#
+Ccofu  =  1.0000000e-006
+Ccofv  =  1.0000000e-006
+Xlo    =  0.0000000e+000
+Vicouv =  0.0000000e-000
+Dicouv =  1.0000000e+001
+Htur2d = #N#
+Vicoww =  0.0000000e-000
+Dicoww =  0.0000000e+000
+Irov   = 0
+Commnt =                  
+Iter   =      2
+Dryflp = #YES#
+Dpsopt = #MAX#
+Dpuopt = #MEAN#
+Dryflc =  1.0000000e-001
+Dco    = -9.9900000e+002
+Tlfsmo =  0.0000000e+000
+ThetQH =  0.0000000e+000
+Forfuv = #Y#
+Forfww = #N#
+Sigcor = #N#
+Trasol = #Cyclic-method#
+Momsol = #Cyclic#
+Commnt =                  
+Commnt =                 no. discharges: 0
+Commnt =                 no. observation points: 2
+Filsta = #IFREMER.obs#
+Commnt =                 no. drogues: 0
+Commnt =                  
+Commnt =                  
+Commnt =                 no. cross sections: 1
+Filcrs = #IFREMER.crs#
+Commnt =                  
+SMhydr = #YYYYY#     
+SMderv = #YYYYYY#    
+SMproc = #YYYYYYYYYY#
+PMhydr = #YYYYYY#    
+PMderv = #YYY#       
+PMproc = #YYYYYYYYYY#
+SHhydr = #YYYY#      
+SHderv = #YYYYY#     
+SHproc = #YYYYYYYYYY#
+SHflux = #YYYY#      
+PHhydr = #YYYYYY#    
+PHderv = #YYY#       
+PHproc = #YYYYYYYYYY#
+PHflux = #YYYY#      
+Prhis  =  0.0000000e+000 1  6.0000000e+001
+Flmap  =  0.0000000e+000 1  3.6000000e+002
+Flhis  =  0.0000000e+000 5  2.5000000e-001
+Flpp   =  0.0000000e+000 1  3.6000000e+002
+Flrst  = 5
+Commnt =                  
+Online = #N#
+Filtrb = #turbines.ini#
+Commnt =                  

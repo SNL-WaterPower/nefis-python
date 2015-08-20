@@ -14,15 +14,44 @@ else:
 cmdclass = { }
 ext_modules = [ ]
 
-if use_cython:
-    ext_modules += [
-        Extension("nefis.nefis", [ "nefis/nefis.pyx" ], libraries=["nefis"]),
-    ]
-    cmdclass.update({ 'build_ext': build_ext })
-else:
-    ext_modules += [
-        Extension("nefis.nefis", [ "nefis/nefis.c" ], libraries=["nefis"]),
-    ]
+import platform
+
+if platform.system() == 'Linux':
+    nefis_libs_loc = "/home/ccchart/wrkdir/SVN/4970/src/utils_lgpl/nefis/packages/nefis/src_so/.libs"
+
+    if use_cython:
+        ext_modules += [
+            Extension(  "nefis",
+                        [ "nefis.pyx" ],
+                        #libraries=["nefis"],
+                        libraries=["NefisSO"],
+                        library_dirs = [nefis_libs_loc],
+                        runtime_library_dirs = [nefis_libs_loc],
+                        include_dirs=[np.get_include()]
+                        ),
+        ]
+        cmdclass.update({ 'build_ext': build_ext })
+    else:
+        print("Import failed (statement): 'from Cython.Distutils import build_ext'")
+
+elif platform.system() == 'Windows':
+    #nefis_libs_loc = r"""C:\Users\ccchart\Desktop\GitHub\Delft3D\src\utils_lgpl\nefis\lib\Release\dynamic"""
+    #nefis_libs_loc = r"""C:\Users\ccchart\Desktop\GitHub\Delft3D\src\utils_lgpl\nefis\lib\Release\static"""
+    nefis_libs_loc = r"""Z:\SVN\4970-win\src\utils_lgpl\nefis\lib\x64\Release\dynamic"""
+
+    if use_cython:
+        ext_modules += [
+            Extension(  "nefis",
+                        [ "nefis.pyx" ],
+                        libraries=["nefis_dll"],
+                        library_dirs = [nefis_libs_loc],
+                        #runtime_library_dirs = [nefis_libs_loc],
+                        include_dirs=[np.get_include()]
+                        ),
+        ]
+        cmdclass.update({ 'build_ext': build_ext })
+    else:
+        print("Import failed (statement): 'from Cython.Distutils import build_ext'")
 
 here = path.abspath(path.dirname(__file__))
 
@@ -36,13 +65,14 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.1.0',
+    version='0.2.0',
 
     description='NEFIS library',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/openearth/nefis-python',
+    #url='https://github.com/openearth/nefis-python',
+    url='http://oss.deltares.nl/web/delft3d',
 
     # Author details
     author='Jan Mooiman',
@@ -57,7 +87,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
@@ -71,6 +101,7 @@ setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Operating System :: Microsoft :: Windows',
     ],
 
     # What does your project relate to?
@@ -78,7 +109,12 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
+    #packages=find_packages(exclude=['contrib', 'docs']),
+    packages=find_packages('.'),
+    #packages=find_packages('data'),
+    package_data = {'data': ['*.dat'] },
+    #data_files=[('data', ['trim-f34.dat', 'data/trim-f34.def'])],
+
     cmdclass = cmdclass,
     ext_modules=ext_modules,
     # List run-time dependencies here.  These will be installed by pip when your
@@ -87,9 +123,8 @@ setup(
     # https://packaging.python.org/en/latest/technical.html#install-requires-vs-requirements-files
     install_requires=['numpy'],
 
-    include_dirs = [np.get_include()],         # <---- New line
+    include_dirs = [np.get_include()],
 
-    data_files=[('nefis_data', ['data/trim-f34.dat', 'data/trim-f34.def'])],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow

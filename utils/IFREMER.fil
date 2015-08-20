@@ -1,0 +1,48 @@
+Domain, Checked : Yes       
+     Grid                  : IFREMER.grd
+     Grid enclosure        : IFREMER.enc
+     Bathymetry            : none
+     Dry points            : none
+     Thin dams             : none
+
+Time frame, Checked : Yes       
+
+Processes, Checked : No        
+
+Initial conditions, Checked : No        
+     Initial conditions    : tri-rst.20150428.000500
+
+Boundaries, Checked : No        
+     Boundary definitions  : IFREMER.bnd
+     Astronomical flow conditions : none
+     Astronomical corrections : none
+     Harmonic flow conditions : none
+     QH-relation flow conditions : none
+     Time series flow conditions : IFREMER.bct
+     Transport conditions  : none
+
+Physical parameters, Checked : No        
+     Roughness coefficients : none
+     Hor. viscosity/diffusivity : none
+     Heat flux model data  : none
+     Sediment data         : none
+     Morphology data       : none
+     Uniform wind data     : none
+     Space varying wind data : none
+
+Numerical parameters, Checked : No        
+
+Operations, Checked : No        
+     Discharge definitions : none
+     Discharge data        : none
+     Dredging and dumping data : none
+
+Monitoring, Checked : Yes       
+     Observation points    : IFREMER.obs
+     Drogues               : none
+     Cross-sections        : IFREMER.crs
+
+Additional parameters, Checked : No        
+
+Output, Checked : Yes       
+     Fourier analysis data : none

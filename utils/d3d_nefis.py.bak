@@ -1,0 +1,135 @@
+from nefis_utils import *
+
+import numpy as np
+import struct
+import os, sys
+
+def mnvel2xyvel(mvel,nvel,alpha):
+
+    # convert alpha from degrees to radians
+    rad = alpha[1:-1, 1:-1]*np.pi/180.0
+
+    utilde = ( mvel[:, :-1, 1:-1] + mvel[:, 1:, 1:-1] ) / 2.0
+    vtilde = ( nvel[:, 1:-1, :-1] + nvel[:, 1:-1, 1:] ) / 2.0
+
+    uvel = utilde[:, :-1, :]*np.cos(rad) - vtilde[:, :, :-1]*np.sin(rad)
+    vvel = utilde[:, :-1, :]*np.sin(rad) + vtilde[:, :, :-1]*np.cos(rad)
+
+    return uvel, vvel
+
+class d3d_data(nef_data):
+    #def __init__(self,filebase, ac_type='r', coding=' '):
+    #    super(d3d_data,self).__init__(filebase, ac_type=ac_type, coding=coding)
+
+    def get_xyvel(self):
+
+        # note variables come in in k,i,j
+        mvel = self.get_data('U1','map-series')
+        nvel = self.get_data('V1','map-series')
+
+        # calculate U and V velocity
+        #  ***** m,n velocityies go in with ghost cells
+        #  ***** u,v, velocities returned with ghost cells trimed
+        alpha = self.get_data('ALFAS','map-const')
+
+        return mnvel2xyvel(mvel,nvel,alpha)
+
+
+    def get_zvals(self):
+
+        thick = self.get_data('THICK','map-const')
+        depth = self.get_data('DP0','map-const')
+        height =  self.get_data('S1','map-series')
+
+        imax=len(depth[:,0])
+        jmax=len(depth[0,:])
+        kmax=len(thick)
+
+        total_thick = 0.0
+        frac=[]
+        # go through thickness from bottom to top
+        for val in thick[::-1]:
+            # increment the total thickness
+            total_thick += val
+            # save the running total height fraction
+            frac.append(total_thick)
+        # reverse the fraction to go from top to bottom
+        frac = frac[::-1]
+
+        # trim ghost cells
+        height = height[1:-1,1:-1]
+        depth = depth[1:-1,1:-1]
+
+        # I "think" this is correct -- TODO check this
+        zvals = np.multiply.outer(frac,(height+depth)) - np.tile(depth,(kmax,1,1))
+
+        return zvals
+
+    def TreeInit(self):
+        from scipy import spatial
+
+        X1 = self.get_data('XZ','map-const')  # cell center values
+        Y1 = self.get_data('YZ','map-const')
+        #X2 = self.get_data('XCOR','map-const')  # node values
+        #Y2 = self.get_data('YCOR','map-const')
+
+        # trim ghost cells off X and Y
+        xvals = X1[    1:-1, 1:-1]
+        yvals = Y1[    1:-1, 1:-1]
+        zvals = self.get_zvals()
+
+        kmax=len(zvals[:,0,0])
+
+        # copy x and y values to each k-layer
+        xvals2=np.tile(xvals,(kmax,1,1))
+        yvals2=np.tile(yvals,(kmax,1,1))
+
+        self.tree = spatial.KDTree(zip(xvals2.ravel(), yvals2.ravel(),zvals.ravel()))
+        self.idxshape = np.shape(zvals)
+
+    def TreeLookup(self,pts):
+        if not hasattr(self,'tree'):
+            print 'tree not initialized.  Initializing'
+            self.TreeInit()
+
+        dists, idxs = self.tree.query(pts)
+
+        if len(idxs) > 1:
+            ijkdx = [np.unravel_index(ind,self.idxshape) for ind in idxs]
+        else:
+            ijdx = np.unravel_index(idxs,self.idxshape)
+
+        return dists, ijkdx
+
+
+    def TreeInterp(self,pts,npts,inpVals):
+        if not hasattr(self,'tree'):
+            print 'tree not initialized.  Initializing'
+            self.TreeInit()
+
+        for val in inpVals:
+            if not np.shape(val) == np.shape(inpVals[0]):
+                print 'Lookup arrays must all be the same size for Interpolation'
+                return
+
+        dists, idxs = self.tree.query(pts,npts)
+
+        outvals=[]
+        for i in range(len(pts)):     # loop through input location points
+
+            if npts > 1:
+                total_weight = sum(1.0/dists[i,:])
+                weight = 1.0/dists[i,:]/total_weight
+                ijkdx = [np.unravel_index(ind,self.idxshape) for ind in idxs[i,:]]
+
+                #            sum ( U or V(i,j,k) * weight)  over number of neightbors
+                outvaltmp = [sum([inp[ijk] for ijk in ijkdx]*weight) for inp in inpVals]
+                outvals.append(outvaltmp)
+            else:
+                ijkdx = np.unravel_index(idxs[i],self.idxshape)
+
+                outvaltmp = [inp[ijkdx] for inp in inpVals]
+                outvals.append(outvaltmp)
+
+        return map(list, zip(*outvals))  # transpose
+
